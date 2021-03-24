@@ -31,7 +31,9 @@ while True:
         for classId, confidence, box in zip(classIds.flatten(),confs.flatten(),bbox):
             cv2.rectangle(img,box,color=(0,255,0),thickness=2) #draw green box for each detected object
             cv2.putText(img,classNames[classId-1].upper(),(box[0]+10,box[1]+30),
-                        cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
+                        cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2) #outputs detected object name
+            cv2.putText(img, str(round(confidence*100,2)), (box[0] + 200, box[1] + 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2) #outputs confidence score
 
     cv2.imshow("Output",img)
     cv2.waitKey(1)
