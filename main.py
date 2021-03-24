@@ -1,11 +1,12 @@
 import cv2
+import numpy as np
 
-thres = 0.5 # threshold for detecting object
-
-#img = cv2.imread('lena.png')
+thres = 0.45 # threshold for detecting object
+nms_threshold = 0.5
 cap = cv2.VideoCapture(0) # accesses macbook webcam
-cap.set(3,640)
-cap.set(4,480)
+cap.set(3,1280) # width parameter
+cap.set(4,720) # height parameter
+cap.set(10,150) # brightness
 
 classNames = []
 classFile = 'coco.names'
@@ -24,16 +25,32 @@ net.setInputSwapRB(True)
 
 while True:
     success, img = cap.read()
-    classIds, confs, bbox = net.detect(img,confThreshold=0.5) #if confidence is 50% and above, it's an object
-    print(classIds, bbox) #class ids refer back to the coco.names class names, bbox is bounding box
+    classIds, confs, bbox = net.detect(img,confThreshold=thres) #if confidence is 50% and above, it's an object
+    #print(classIds, bbox) #class ids refer back to the coco.names class names, bbox is bounding box
 
-    if len(classIds) != 0:
-        for classId, confidence, box in zip(classIds.flatten(),confs.flatten(),bbox):
-            cv2.rectangle(img,box,color=(0,255,0),thickness=2) #draw green box for each detected object
-            cv2.putText(img,classNames[classId-1].upper(),(box[0]+10,box[1]+30),
-                        cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2) #outputs detected object name
-            cv2.putText(img, str(round(confidence*100,2)), (box[0] + 200, box[1] + 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2) #outputs confidence score
+    bbox = list(bbox)
+    confs = list(np.array(confs).reshape(1,-1)[0]) # numpy array to list
+    confs = list(map(float,confs)) # float32 to float
+    indices = cv2.dnn.NMSBoxes(bbox,confs,thres,nms_threshold)
+
+    for i in indices:
+        i = i[0]
+        box = bbox[i]
+        x,y,w,h = box[0],box[1],box[2],box[3]
+        cv2.rectangle(img,(x,y),(x+w,y+h),color=(0,255,0),thickness=2)
+        cv2.putText(img, classNames[classIds[i][0]-1].upper(), (x + 10, y + 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
+        cv2.putText(img, str(round(confs[i] * 100, 2)), (x + w - 100, y + 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2) #outputs confidence score
+
+    ## without NMS
+    # if len(classIds) != 0:
+    #     for classId, confidence, box in zip(classIds.flatten(),confs.flatten(),bbox):
+    #         cv2.rectangle(img,box,color=(0,255,0),thickness=2) #draw green box for each detected object
+    #         cv2.putText(img,classNames[classId-1].upper(),(box[0]+10,box[1]+30),
+    #                     cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2) #outputs detected object name
+    #         cv2.putText(img, str(round(confidence*100,2)), (box[0] + 200, box[1] + 30),
+    #                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2) #outputs confidence score
 
     cv2.imshow("Output",img)
     cv2.waitKey(1)
