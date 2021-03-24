@@ -3,8 +3,7 @@ import numpy as np
 
 thres = 0.45 # threshold for detecting object
 nms_threshold = 0.5
-cap = cv2.VideoCapture(0) # accesses macbook webcam
-cap.set(3,1280) # width parameter
+cap = cv2.VideoCapture(1) # accesses macbook webcam with value 1, pupil labs world cam: 3
 cap.set(4,720) # height parameter
 cap.set(10,150) # brightness
 
@@ -24,7 +23,7 @@ net.setInputSwapRB(True)
 
 
 while True:
-    success, img = cap.read()
+    success, img = cap.read() # img will be video frames
     classIds, confs, bbox = net.detect(img,confThreshold=thres) #if confidence is 50% and above, it's an object
     #print(classIds, bbox) #class ids refer back to the coco.names class names, bbox is bounding box
 
@@ -38,10 +37,10 @@ while True:
         box = bbox[i]
         x,y,w,h = box[0],box[1],box[2],box[3]
         cv2.rectangle(img,(x,y),(x+w,y+h),color=(0,255,0),thickness=2)
-        cv2.putText(img, classNames[classIds[i][0]-1].upper(), (x + 10, y + 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
-        cv2.putText(img, str(round(confs[i] * 100, 2)), (x + w - 100, y + 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2) #outputs confidence score
+        cv2.putText(img, classNames[classIds[i][0]-1].upper(), (x, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,255,0),2)
+        cv2.putText(img, str(round(confs[i] * 100, 2)), (x + w - 50, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2) #outputs confidence score
 
     ## without NMS
     # if len(classIds) != 0:
